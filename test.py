@@ -9,7 +9,7 @@ import os
 load_dotenv(find_dotenv(),override=True)
 CHROMADB_HOST = os.environ.get("CHROMADB_HOST")
 CHROMADB_PORT = os.environ.get("CHROMADB_PORT")
-
+OPEN_AI_API_KEY = os.environ.get("OPEN_AI_API_KEY")
 #print(CHROMADB_HOST)
 
 
@@ -19,11 +19,7 @@ def load_pdf(file_path):
  loader = PyPDFLoader(file_path= file_path)
  docs = loader.load()
  return docs
- #print(docs)
 
-
-
-#pages = load_pdf(sample_pdf_path)
 
 ###Part2: Chunking Document
 #Spliter model
@@ -69,10 +65,6 @@ from langchain.vectorstores.chroma import Chroma
 #docs = langchain_chroma.similarity_search(query)
 #print(docs[0].page_content)
 
- 
-
-
-
 ###PART4.5 INSERT to Pinecone
 #import pinecone
 #from langchain.vectorstores.pinecone import Pinecone 
@@ -85,8 +77,11 @@ from langchain.vectorstores.chroma import Chroma
 #    pinecone.create_index(index_name, dimension=768, metric='cosine')
 #    print('Done!')
 #vector_store = Pinecone.from_documents(documents=chunks,embedding=model, index_name = index_name)
-model = HuggingFaceEmbeddings(model_name = "bkai-foundation-models/vietnamese-bi-encoder")
 
+model = HuggingFaceEmbeddings(model_name = "bkai-foundation-models/vietnamese-bi-encoder")
+database = Chroma(persist_directory="./chroma_db", embedding_function=model)
+
+#INSERT document to db
 def insert_pdf_to_db(file_path):
  #Load pdf into pages
  pages = load_pdf(file_path)
@@ -98,10 +93,45 @@ def insert_pdf_to_db(file_path):
    chunk = Document(page_content=doc.page_content, metadata=page.metadata)
    chunks.append(chunk)
  #Tạo DB
- 
  db2 = Chroma.from_documents(chunks, model, persist_directory="./chroma_db")
+
+
+def get_similar_chunks(query,db=database,k=4):
+ chunks = db.similarity_search_with_score(query=query,k=k)
+ return chunks
  
-  
+def get_response_from_query(query,chunks):
+ chunks = chunks
+ docs = " ".join([d[0].page_content for d in chunks])
+
+ from langchain.chat_models import ChatOpenAI
+ from langchain.prompts import PromptTemplate
+ from langchain.chains import LLMChain
+
+ llm = ChatOpenAI(model_name='gpt-3.5-turbo', temperature=0.5,openai_api_key=OPEN_AI_API_KEY)
+
+ prompt =PromptTemplate(
+        input_variables=["question", "docs"],
+        template="""
+        Bạn là người trợ lý xuất sắc với hiểu biết về các tài liệu được đưa ra.
+        
+        Trả lời câu hỏi sau: {question}
+        Dựa trên tài liệu sau: {docs}
+        
+        Chỉ sử dụng những thông tin được đề cập đến trong tài liệu.
+        
+        Nếu bạn thấy tài liệu không đủ thông tin, hãy trả lời "Tôi không có thông tin về câu hỏi của bạn".
+        
+        Hãy viết lại các bước nếu có thể.
+        
+        Câu trả lời của bạn cần phải ngắn gọn và súc tích.
+        """,
+    )
+ chain = LLMChain(llm=llm, prompt=prompt)
+ output = chain.run({'question': query, 'docs': docs})
+ return output
+
+#############TEST###############
 sample_pdf_path = "sample pdf/cnxh.pdf"
 sample_pdf_path2 = "sample pdf/kiemtraquyche.pdf"
 sample_pdf_path3 = "sample pdf/ktpt.pdf"
@@ -109,12 +139,16 @@ sample_pdf_path3 = "sample pdf/ktpt.pdf"
 #insert_pdf_to_db(sample_pdf_path)
 #insert_pdf_to_db(sample_pdf_path3)
 
-query = '''Món quà tôi gửi tặng bạn.'''
-db3 = Chroma(persist_directory="./chroma_db", embedding_function=model)
-docs = db3.similarity_search(query)
-for doc in docs:
- print(doc.page_content)
- print(doc.metadata)
- print("-"*50)
+query = "Sinh viên phải làm thẻ bảo hiểm y tế ở đâu"
+chunks = get_similar_chunks(query=query)
 
- 
+response = get_response_from_query(chunks=chunks,query=query)
+print(response)
+i = 1
+for chunk in chunks:
+ if chunk[1]>30:
+   print(i,"Dựa trên file: ",chunk[0].metadata['source'],"trang",chunk[0].metadata['page'])
+   #print(chunk[0].page_content)
+   i = i+1
+
+
