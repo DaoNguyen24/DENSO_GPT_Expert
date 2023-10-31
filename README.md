@@ -6,8 +6,8 @@ Sàn phẩm là một AI Chatbot với chức năng thu thập tài liệu nhà 
 dựa trên tài liệu thu thập được. Team sẽ phát triển thêm các chức năng khác phù hợp hơn
 
 Đội thi chúng tôi gồm:
-Lê Đức Nguyên - HUST
-Trần Đức Đào Nguyên -HUST
+Lê Đức Nguyên - HUST\n
+Trần Đức Đào Nguyên -HUST\n
 Trần Văn An - FPTU
 Lữ Xuân Đức - HUST
 Nguyễn Tuấn Trường - FPTU
