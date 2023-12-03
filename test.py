@@ -4,105 +4,62 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
 from dotenv import load_dotenv,find_dotenv
 import os
+import fitz
 
 ####################STAGE 0 LOAD CONFIG ############################
 load_dotenv(find_dotenv(),override=True)
-CHROMADB_HOST = os.environ.get("CHROMADB_HOST")
-CHROMADB_PORT = os.environ.get("CHROMADB_PORT")
 OPEN_AI_API_KEY = os.environ.get("OPEN_AI_API_KEY")
 #print(CHROMADB_HOST)
 
 
 #####################STAGE 1 BUILDING VECTOR DB########################
-###PArt1: Document input 
-def load_pdf(file_path):
- loader = PyPDFLoader(file_path= file_path)
- docs = loader.load()
- return docs
 
 
 ###Part2: Chunking Document
 #Spliter model
-def split_document(docs,chunk_size = 800, chunk_overlap = 20):
+def split_document(docs,chunk_size = 600, chunk_overlap = 20):
  text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap
-    )
-    
+    ) 
     # Splitting the documents into chunks
  chunks = text_splitter.create_documents([docs])
-    
-    # returning the document chunks
  return chunks
 
 
 ###Part3: Embedding Document
 #Create embedding model 
 from langchain.embeddings import HuggingFaceEmbeddings
-
-
-###PART4: Insert to ChromaDB
-import chromadb
-import uuid
 from langchain.vectorstores.chroma import Chroma
-##chroma_client = chromadb.HttpClient(host='localhost', port=8000)
-#chroma_client = chromadb.PersistentClient()
-#collection = chroma_client.get_or_create_collection(name="document_DENSO",embedding_function=embedding_function)
-#for chunk in chunks:
-# collection.add(
-#  ids = [str(uuid.uuid1())],
-#  metadatas=chunk.metadata,
-#  documents=chunk.page_content
-# )
-#
-#langchain_chroma = chroma(
-#    client = chroma_client,
-#    collection_name="document_DENSO",
-#    embedding_function=embedding_function,
-#)
-#
-#query = "This manual should be considered a permanent part of the vehicle\nand should remain with the vehicle when it is resold."
-#docs = langchain_chroma.similarity_search(query)
-#print(docs[0].page_content)
-
-###PART4.5 INSERT to Pinecone
-#import pinecone
-#from langchain.vectorstores.pinecone import Pinecone 
-#
-#pinecone.init(api_key=os.environ.get('PINECONE_API_KEY'), environment=os.environ.get('PINECONE_ENV'))
-#
-#index_name = 'denso-index'
-#if index_name not in pinecone.list_indexes():
-#    print(f'Creating index {index_name} ...')
-#    pinecone.create_index(index_name, dimension=768, metric='cosine')
-#    print('Done!')
-#vector_store = Pinecone.from_documents(documents=chunks,embedding=model, index_name = index_name)
-
-model = HuggingFaceEmbeddings(model_name = "bkai-foundation-models/vietnamese-bi-encoder")
+model = HuggingFaceEmbeddings(model_name = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+#model = HuggingFaceEmbeddings(model_name = 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
 database = Chroma(persist_directory="./chroma_db", embedding_function=model)
 
 #INSERT document to db
 def insert_pdf_to_db(file_path):
  #Load pdf into pages
- pages = load_pdf(file_path)
+ pages = fitz.open(file_path)
  chunks = []#create empty chunks
  #insert từng chunk vào chunk
  for page in pages:
-  docs = split_document(page.page_content)
+  docs = split_document(page.get_text().replace('\n', ' ').lower())#Return Langchain Documents list
+  
   for doc in docs:
-   chunk = Document(page_content=doc.page_content, metadata=page.metadata)
+   chunk = Document(page_content=doc.page_content, metadata={'source': pages.name,'page': page.number})
    chunks.append(chunk)
+   
  #Tạo DB
- db2 = Chroma.from_documents(chunks, model, persist_directory="./chroma_db")
+ Chroma.from_documents(chunks, model, persist_directory="./chroma_db")
+ #print(chunks)
 
 
-def get_similar_chunks(query,db=database,k=4):
+def get_similar_chunks(query,db=database,k=5):
  chunks = db.similarity_search_with_score(query=query,k=k)
  return chunks
  
 def get_response_from_query(query,chunks):
  chunks = chunks
- docs = " ".join([d[0].page_content for d in chunks])
+ docs = " ".join([chunk[0].page_content for chunk in chunks if chunk[1]>33])
 
  from langchain.chat_models import ChatOpenAI
  from langchain.prompts import PromptTemplate
@@ -113,42 +70,56 @@ def get_response_from_query(query,chunks):
  prompt =PromptTemplate(
         input_variables=["question", "docs"],
         template="""
-        Bạn là người trợ lý xuất sắc với hiểu biết về các tài liệu được đưa ra.
-        
-        Trả lời câu hỏi sau: {question}
-        Dựa trên tài liệu sau: {docs}
-        
-        Chỉ sử dụng những thông tin được đề cập đến trong tài liệu.
-        
-        Nếu bạn thấy tài liệu không đủ thông tin, hãy trả lời "Tôi không có thông tin về câu hỏi của bạn".
-        
-        Hãy viết lại các bước nếu có thể.
-        
-        Câu trả lời của bạn cần phải ngắn gọn và súc tích.
+        ###
+         You are an Process assistants, you have knowledge of process, guidelines, machine document of the factory.
+
+         Given the document bellow, Provide the instruction about the question below base on the provided provided document
+         You use the tone that instructional,technical and concisely.
+         Answer in Vietnamese
+        ###
+         Document: {docs}
+         Question: {question}
         """,
     )
  chain = LLMChain(llm=llm, prompt=prompt)
  output = chain.run({'question': query, 'docs': docs})
  return output
 
+
+
 #############TEST###############
-sample_pdf_path = "sample pdf/cnxh.pdf"
-sample_pdf_path2 = "sample pdf/kiemtraquyche.pdf"
-sample_pdf_path3 = "sample pdf/ktpt.pdf"
+sample_pdf_path = "sample pdf\Huong dan su dung CP1000_VN.pdf"
+sample_pdf_path2 = "sample pdf\LNCT800SoftwareApplicationManual-3.pdf"
+
+insert_pdf_to_db(sample_pdf_path)
 #insert_pdf_to_db(sample_pdf_path2)
-#insert_pdf_to_db(sample_pdf_path)
-#insert_pdf_to_db(sample_pdf_path3)
 
-query = "Sinh viên phải làm thẻ bảo hiểm y tế ở đâu"
-chunks = get_similar_chunks(query=query)
+insert_pdf_to_db("sample pdf\LNCT800SoftwareApplicationManual (1).pdf")
 
-response = get_response_from_query(chunks=chunks,query=query)
-print(response)
+query = "the Alarm message is INT3170, what is it? how to fix it?"
+chunks = get_similar_chunks(query=query.lower())
 i = 1
 for chunk in chunks:
- if chunk[1]>30:
-   print(i,"Dựa trên file: ",chunk[0].metadata['source'],"trang",chunk[0].metadata['page'])
+ #if chunk[1]>30:
+   print("      Score:",chunk[1])
+   print("source:",chunk[0].metadata['source'],"page",chunk[0].metadata['page'])
+   print(chunk[0].page_content)
    #print(chunk[0].page_content)
+   #with open("result.txt",'a',encoding='utf-8') as f:
+   # f.write(str(i))
+   # 
+   # f.write(". Score:")
+   # f.write(str(chunk[1]))
+   # f.write("\n")
+   # f.writelines(str(chunk[0].metadata['source']))
+   # f.writelines(str(chunk[0].metadata['page']))
+   # #f.write("source:",chunk[0].metadata['source'],"page",chunk[0].metadata['page'])
+   # f.write(str(chunk[0].page_content))
+   # f.write("\n-------------------------------------------\n")
    i = i+1
+
+#response = get_response_from_query(chunks=chunks,query=query)
+#print(response)
+
 
 
