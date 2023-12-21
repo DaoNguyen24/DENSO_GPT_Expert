@@ -58,7 +58,11 @@ def retrive_Hybrid(query):
      vector=hdense,
      sparse_vector=hsparse,
      include_metadata=True,
-     include_values=False
+     include_values=False,
+     filter={
+       'source':'sample pdf\LNCT800SoftwareApplicationManual-265-280.pdf'
+     }
+
  )
  #print(result)
  scores = {}
@@ -66,7 +70,7 @@ def retrive_Hybrid(query):
  for chunk in result['matches']:
     index = 'source: '+str(chunk.metadata['source'])+ " page: "+str(chunk.metadata['page'])
     dict.append({
-       str(chunk.metadata['source']) : str(chunk.metadata['page'])
+       str(chunk.metadata['source']) : int(chunk.metadata['page'])
     })
     scores[index] ={'score':0,'count':0, 'mean':0}
  for chunk in result['matches']:
@@ -80,6 +84,8 @@ def retrive_Hybrid(query):
         #print(score,'.....',scores[score]['count'],'......',scores[score]['score'])
  return dict
 
-query = "Lỗi 3170 xử lý thế nào"
-dict = retrive_Hybrid(query=query)
-print(dict)
+#print("Hybrid Result: ")
+#query = "sửa lỗi INt3170"
+#dict1 = retrive_Hybrid(query=query)
+#print(dict1)
+

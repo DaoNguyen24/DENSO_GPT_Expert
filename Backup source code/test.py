@@ -17,7 +17,7 @@ OPEN_AI_API_KEY = os.environ.get("OPEN_AI_API_KEY")
 
 ###Part2: Chunking Document
 #Spliter model
-def split_document(docs,chunk_size = 600, chunk_overlap = 20):
+def split_document(docs,chunk_size = 1000, chunk_overlap = 0):
  text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap
@@ -89,9 +89,9 @@ def get_response_from_query(query,chunks):
 
 #############TEST###############
 
-insert_pdf_to_db('sample pdf\LNCT800SoftwareApplicationManual-265-280.pdf')
+#insert_pdf_to_db('sample pdf\LNCT800SoftwareApplicationManual-265-280.pdf')
 #insert_pdf_to_db(sample_pdf_path2)
-#insert_pdf_to_db("sample pdf/tachtsst3.pdf")
+insert_pdf_to_db("sample pdf/tachtsst3.pdf")
 #insert_pdf_to_db("sample pdf\LNCT800SoftwareApplicationManual (1).pdf")
 
 

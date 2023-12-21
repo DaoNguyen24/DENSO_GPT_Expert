@@ -58,7 +58,10 @@ def retrive_Keyword(query):
      vector=hdense,
      sparse_vector=hsparse,
      include_metadata=True,
-     include_values=False
+     include_values=False,
+     filter={
+       'source':'sample pdf\LNCT800SoftwareApplicationManual-265-280.pdf'
+     }
  )
  #print(result)
  scores = {}
@@ -66,7 +69,7 @@ def retrive_Keyword(query):
  for chunk in result['matches']:
     index = 'source: '+str(chunk.metadata['source'])+ " page: "+str(chunk.metadata['page'])
     dict.append({
-       str(chunk.metadata['source']) : str(chunk.metadata['page'])
+       str(chunk.metadata['source']) : int(chunk.metadata['page'])
     })
     scores[index] ={'score':0,'count':0, 'mean':0}
  for chunk in result['matches']:
@@ -76,10 +79,13 @@ def retrive_Keyword(query):
     scores[index]['mean'] = scores[index]['score']/scores[index]['count']
 
 
-    #for score in scores:
-        #print(score,'.....',scores[score]['count'],'......',scores[score]['score'])
+# for score in scores:
+#   print(score,'.....',scores[score]['count'],'......',scores[score]['score'])
  return dict
 
-#query = "Lỗi 3170 xử lý thế nào"
-#dict = retrive_Keyword(query=query)
-#print(dict)
+
+#print("Keyword Result: ")
+#query = "Sửa lỗi INT3170"
+#dict1 = retrive_Keyword(query=query)
+#print(dict1)
+

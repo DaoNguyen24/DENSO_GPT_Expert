@@ -43,7 +43,7 @@ def hybrid_scale(dense, sparse, alpha: float):
     return hdense, hsparse
 
 ########################
-query = "Lỗi INT3170 xử lý thế nào"
+query = " Lỗi INT3170 tôi cần làm gì"
 # create sparse and dense vectors
 #sparse = sparse_model.encode_documents(query)
 sparse = sparse_model.encode_queries(query)
