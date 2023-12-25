@@ -106,7 +106,5 @@ example_file_path = "sample pdf\LNCT800SoftwareApplicationManual-265-280.pdf"
 example_file_path2 = "sample pdf/tachtsst3.pdf"
 chunks = load_data(example_file_path)
 upsert_to_pinecone(chunks=chunks, index_name= index_name)
-insert_to_chroma(chunks=chunks)
-chunks2 = load_data(example_file_path2)
-upsert_to_pinecone(chunks=chunks2, index_name= index_name)
-insert_to_chroma(chunks=chunks2)
+#insert_to_chroma(chunks=chunks)
+

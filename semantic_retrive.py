@@ -36,7 +36,7 @@ def retrive_Semantic(query):
     #i = i+1
  return dict
 
-print("Semantic Result: ")
-query = "sửa lỗi INt3170"
-dict1 = retrive_Semantic(query=query)
-print(dict1)
+#print("Semantic Result: ")
+#query = "sửa lỗi INt3170"
+#dict1 = retrive_Semantic(query=query)
+#print(dict1)
