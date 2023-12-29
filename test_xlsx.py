@@ -77,7 +77,6 @@ def load_data(file_path):
 	
 			for doc in docs:
 				id += 1
-				
 				#gen chunk.
 				chunk = Document(
 					page_content=doc.page_content, 

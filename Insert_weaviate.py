@@ -48,10 +48,12 @@ class_obj = {
     ],
 }
 # Add the PDFDocument schema
-client.schema.create_class(class_obj)
-
+try:
+    client.schema.create_class(class_obj)
+except:
+   print("Using Denso Document collection")
 # Get the schema to verify that it worked
-schema = client.schema.get()
+#schema = client.schema.get()
 #import json
 #print(json.dumps(schema, indent=4))
 
@@ -70,10 +72,9 @@ def split_document(docs,chunk_size = 1000, chunk_overlap = 0):
  return chunks
 
 
-def insert_pdf_to_db(client, file_path):
-    # Load pdf into pages
+def pdf_readable_chunk(file_path):
     pages = fitz.open(file_path)
-    chunks = []  # create empty chunks
+    chunks =[]
     # insert từng chunk vào chunk
     for page in pages:
         docs = split_document(page.get_text().replace('\n', ' ').lower())  # Return Langchain Documents list
@@ -85,11 +86,42 @@ def insert_pdf_to_db(client, file_path):
                 'page': str(page.number)
             }
             chunks.append(chunk_data)
+    return chunks
 
-    # Insert chunks into the database
-    
+def excel_chunk(file_path):
+ import pandas
+ xls = pandas.ExcelFile(file_path)
+ id = 0
+ chunks = []
+ for sheet in xls.sheet_names:
+  df = pandas.read_excel(xls, sheet)
+  df = df.fillna('')
+  text = df.values.astype(str)
+  lines = []
+  for txt in text:
+   lines.append(', '.join(txt))
+  text = '\n'.join(lines)
+  docs = split_document(text) # return Langchain Documents list
 
-# Your existing code...
+  for doc in docs:
+   id += 1
+			#gen chunk.
+   chunk ={
+			'content' : doc.page_content,
+			'source': file_path,
+			'page': str(xls.sheet_names.index(sheet)),
+					
+	}
+   chunks.append(chunk)
+ return chunks
+
+
+def insert_pdf_to_db(client, file_path):
+    chunks = [] 
+    if file_path.split('.')[-1] == 'pdf':
+        chunks = pdf_readable_chunk(file_path=file_path)
+    if file_path.split('.')[-1] == 'xlsx':
+       chunks = excel_chunk(file_path=file_path)
     #print (chunks)
     client = client
     import time
@@ -113,61 +145,27 @@ def insert_pdf_to_db(client, file_path):
             else:
                 print(f"Error adding chunk: {chunk}. Error: {error_message}")
 
-    print("Inserted ",counter," chunks to Denso_Document")
+    print("Inserted ",counter," chunks to Denso_Document from ", file_path)
     
 
 
-insert_pdf_to_db(client, file_path="sample pdf\LNCT800SoftwareApplicationManual-265-280.pdf")
+import os
 
-object={
-    'source': "Heloo",
-    'page': 'Heloo',
-    'content' : "Helooo Content"
+dir = os.listdir("sample pdf")
+for file in dir:
+   insert_pdf_to_db(client=client, file_path="sample pdf/"+file)
+
+
+doc1 = {
+   'filepath': "sample pdf\LNCT800SoftwareApplicationManual.pdf",
+   'machine_name': "DCM",
+   'code': "VDCM0001.2.3.a",
+   'line': ' 1.2.3.a',
+   'description': "Thao tác Nạp khí nito vào bình cho Injection"
+
 }
-client.batch.configure(batch_size=100)  # Configure batch
-with client.batch as batch:
-        batch.add_data_object(
-            object,
-            'Denso_Document',
-            # tenant="tenantA"  # If multi-tenancy is enabled, specify the tenant to which the object will be added.
-        )
 
 
-#response = client.query.get("Denso_Document", ['source','page','content']).do()
-response = (
-    client.query
-    .get("Denso_Document",properties=['source','page','content'])
-    .with_bm25(
-      query="Int3170"
-    )
-    .with_additional("score")
-    .with_limit(3)
-    .do()
-)
-import json
-print(json.dumps(response, indent=2))
 
-response2 = (
-    client.query
-    .get("Denso_Document", properties=['source','page','content'])
-    .with_hybrid(
-        query="Int3170",
-    )
-    .with_additional(["score", "explainScore"])
-    .with_limit(3)
-    .do()
-)
-print(json.dumps(response2, indent=2))
 
-response3 = (
-    client.query
-    .get("Denso_Document", properties=['source','page','content'])
-    .with_near_text({
-        "concepts": ["Int3170"]
-    })
-    .with_limit(2)
-    .with_additional(["distance"])
-    .do()
-)
 
-print(json.dumps(response3, indent=2))
