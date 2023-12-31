@@ -248,8 +248,8 @@ doc4 = {
    'description': "Thay thế Motor trục 1"
 
 }
-#list_máy = [doc1,doc2,doc3,doc4]
-list_máy = [doc2]
+list_máy = [doc1,doc2,doc3,doc4]
+#list_máy = [doc2]
 for máy in list_máy:
    insert_pdf_to_db(client=client,doc=máy)
 
