@@ -58,7 +58,7 @@ def get_filter(client,query):
                 "valueText": machine_name,
             },
             {
-                "operator": "Or",
+                "operator": "And",
                 "operands": [
                     {
                         "path": ["line"],
@@ -68,6 +68,7 @@ def get_filter(client,query):
                     {
                         "path": ["code"],
                         "operator": "Like",
+                        #"valueText": 'CNC1'
                         "valueText": line_filter["code"],
                     },
                 ]
@@ -85,7 +86,7 @@ def keyword_retrive(client,query,filter):
         .with_where(filter)
         .with_bm25(
           query=query,
-          properties=['description',"content"]
+          properties=['description^2',"content"]
         )
         .with_additional("score")
         .with_limit(5)
@@ -109,11 +110,11 @@ def hybrid_retrive(client , query,filter ):
         .with_where(filter)
         .with_hybrid(
             query=query,
-            alpha= 0.25,
-            properties=['description',"content"]
+            alpha= 0.4,
+            properties=['description^2',"content"]
         )
         .with_additional(["score"])
-        .with_limit(5)
+        .with_limit(4)
         .do()
     )
     list = []
@@ -134,7 +135,7 @@ def semantic_retrive(client, query,filter ):
         .with_near_text({
             "concepts": query
         })
-        .with_limit(5)
+        .with_limit(3)
         .with_additional(["certainty"])
         .do()
     )
@@ -165,20 +166,38 @@ def get_3_page(list_of_responses):
 if __name__ == "__main__":
     client = weaviate.Client("http://localhost:8081")
     print("weaviatedb is ready: ",client.is_ready())
-    query = "Làm thế nào để Sửa lỗi int3170 LNCT800 ở dây chuyền 1.1.1.1"
+    query = "Làm thế nào để thay filter máy hút bụi trên máy DCM?"
     filter = get_filter(client=client,query=query)
     list1 = keyword_retrive(client=client,query= query,filter=filter)
     list2 = hybrid_retrive(client=client,query= query,filter=filter)
     list3 = semantic_retrive(client=client,query=query,filter=filter)
     responses_list = list1+list2+list3
-    #print(get_4_page(responses_list))
+    ##print(get_4_page(responses_list))
     import pandas as pd
     df = pd.DataFrame(responses_list)
     result = get_3_page(responses_list)
+    
+    print(filter)
     print(df)
     print(result)
     #print(list3)
+    #print(list1)
 
     #print("keyword\n",keyword_retrive())
     #print("Hybrid\n",hybrid_retrive())
     #print("semantic\n",semantic_retrive())
+
+def List_of_meta_data(query):
+    client = weaviate.Client("http://localhost:8081")
+    print("weaviatedb is ready: ",client.is_ready())
+    query = query
+    filter = get_filter(client=client,query=query)
+    list1 = keyword_retrive(client=client,query= query,filter=filter)
+    list2 = hybrid_retrive(client=client,query= query,filter=filter)
+    list3 = semantic_retrive(client=client,query=query,filter=filter)
+    responses_list = list1+list2+list3
+    ##print(get_4_page(responses_list))
+    #import pandas as pd
+    #df = pd.DataFrame(responses_list)
+    result = get_3_page(responses_list)
+    return result
