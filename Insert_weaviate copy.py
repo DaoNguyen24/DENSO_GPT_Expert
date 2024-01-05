@@ -2,97 +2,99 @@ import weaviate
 import weaviate.classes as wvc
 import os
 
-client = weaviate.Client("http://localhost:8081")
-print("weaviatedb is ready: ",client.is_ready())
-client.schema.delete_all()
-class_obj = {
-    "class": "Denso_Document",
-    "vectorizer": "text2vec-transformers",  # this could be any vectorizer
-    "moduleConfig": {
-        "text2vec-transformers": {  # this must match the vectorizer used
-            "vectorizeClassName": False,
-            "model": "paraphrase-multilingual-MiniLM-L12-v2",
-        }
-    },
-    "properties": [
-        {
-            "name": "source",
-            "dataType": ["text"],
-            "moduleConfig": {
-                "text2vec-transformers": {  # this must match the vectorizer used
-                    "skip": True,
-                    #"tokenization": "lowercase"
-                }
-            }
-        },
-        {
-            "name": "page",
-            "dataType": ["text"],
-            "moduleConfig": {
-                "text2vec-transformers": {  # this must match the vectorizer used
-                    "skip": True  # Don't vectorize body
-                    #"tokenization": "whitespace"
-                }
-            }
-        },
-        {
-            "name": "content",
-            "dataType": ["text"],
-            "moduleConfig": {
-                "text2vec-transformers": {  # this must match the vectorizer used
-                    "vectorizePropertyName": True,  # vectorize body
-                    #"tokenization": "whitespace"
-                }
-            }
-        },
-        {
-            "name": "machine_name",
-            "dataType": ["text"],
-            "moduleConfig": {
-                "text2vec-transformers": {  # this must match the vectorizer used
-                    "vectorizePropertyName": True,  # vectorize body
-                    #"tokenization": "whitespace"
-                }
-            }
-        },
-        {
-            "name": "code",
-            "dataType": ["text"],
-            "moduleConfig": {
-                "text2vec-transformers": {  # this must match the vectorizer used
-                    "vectorizePropertyName": True,  # vectorize body
-                    #"tokenization": "whitespace"
-                }
-            }
-        },
-        {
-            "name": "line",
-            "dataType": ["text"],
-            "moduleConfig": {
-                "text2vec-transformers": {  # this must match the vectorizer used
-                    "vectorizePropertyName": True,  # vectorize body
-                    #"tokenization": "whitespace"
-                }
-            }
-        },
-        {
-            "name": "description",
-            "dataType": ["text"],
-            "moduleConfig": {
-                "text2vec-transformers": {  # this must match the vectorizer used
-                    "vectorizePropertyName": True,  # vectorize body
-                    #"tokenization": "whitespace"
-                }
-            }
-        },
-
-    ],
-}
-# Add the PDFDocument schema
-try:
-    client.schema.create_class(class_obj)
-except:
-   print("Using Denso Document collection")
+def create_class():
+ client = weaviate.Client("http://localhost:8081")
+ print("weaviatedb is ready: ",client.is_ready())
+ client.schema.delete_all()
+ class_obj = {
+     "class": "Denso_Document",
+     "vectorizer": "text2vec-transformers",  # this could be any vectorizer
+     "moduleConfig": {
+         "text2vec-transformers": {  # this must match the vectorizer used
+             "vectorizeClassName": False,
+             "model": "paraphrase-multilingual-MiniLM-L12-v2",
+         }
+     },
+     "properties": [
+         {
+             "name": "source",
+             "dataType": ["text"],
+             "moduleConfig": {
+                 "text2vec-transformers": {  # this must match the vectorizer used
+                     "skip": True,
+                     #"tokenization": "lowercase"
+                 }
+             }
+         },
+         {
+             "name": "page",
+             "dataType": ["text"],
+             "moduleConfig": {
+                 "text2vec-transformers": {  # this must match the vectorizer used
+                     "skip": True  # Don't vectorize body
+                     #"tokenization": "whitespace"
+                 }
+             }
+         },
+         {
+             "name": "content",
+             "dataType": ["text"],
+             "moduleConfig": {
+                 "text2vec-transformers": {  # this must match the vectorizer used
+                     "vectorizePropertyName": True,  # vectorize body
+                     #"tokenization": "whitespace"
+                 }
+             }
+         },
+         {
+             "name": "machine_name",
+             "dataType": ["text"],
+             "moduleConfig": {
+                 "text2vec-transformers": {  # this must match the vectorizer used
+                     "vectorizePropertyName": True,  # vectorize body
+                     #"tokenization": "whitespace"
+                 }
+             }
+         },
+         {
+             "name": "code",
+             "dataType": ["text"],
+             "moduleConfig": {
+                 "text2vec-transformers": {  # this must match the vectorizer used
+                     "vectorizePropertyName": True,  # vectorize body
+                     #"tokenization": "whitespace"
+                 }
+             }
+         },
+         {
+             "name": "line",
+             "dataType": ["text"],
+             "moduleConfig": {
+                 "text2vec-transformers": {  # this must match the vectorizer used
+                     "vectorizePropertyName": True,  # vectorize body
+                     #"tokenization": "whitespace"
+                 }
+             }
+         },
+         {
+             "name": "description",
+             "dataType": ["text"],
+             "moduleConfig": {
+                 "text2vec-transformers": {  # this must match the vectorizer used
+                     "vectorizePropertyName": True,  # vectorize body
+                     #"tokenization": "whitespace"
+                 }
+             }
+         },
+ 
+     ],
+ }
+ # Add the PDFDocument schema
+ try:
+     client.schema.create_class(class_obj)
+     print("Created Denso_Document")
+ except:
+    print("Using Denso Document collection")
 # Get the schema to verify that it worked
 #schema = client.schema.get()
 #import json
@@ -255,52 +257,63 @@ import os
 #for file in dir:
    #insert_pdf_to_db(client=client, file_path="sample pdf/"+file)
 
+if __name__ == "__main__":
+ 
+ client = weaviate.Client("http://localhost:8081")
+ print("weaviatedb is ready: ",client.is_ready())
+ 
+ doc1 = {
+    'file_path': "sample pdf/Nạp ni tơ vào bình injection - Máy DCM.xlsx",
+    'machine_name': "DCM",
+    'code': "VDCM0001.2.3.a",
+    'line': '1.2.3.a',
+    'description': "Thao tác Nạp khí nito vào bình cho Injection"
+ 
+ }
+ doc2 = {
+    'file_path': "sample pdf/LNCT800SoftwareApplicationManual.pdf",
+    'machine_name': "LNCT800",
+    'code': "CNC1",
+    'line': '1.1.1.1',
+    'description': "Các lỗi thường gặp trong LNCT800"
+ 
+ }
+ doc3 = {
+    'file_path': "sample pdf/Thao tác thay filter máy hút bụi - May Shot Blast.pdf",
+    'machine_name': "DCM",
+    'code': "VDCM0001.2.3.a",
+    'line': '1.2.3.a',
+    'description': "Thao tác thay filter máy hút bụi"
+ 
+ }
+ doc4 = {
+    'file_path': "sample pdf/thay thế Motor trục - Robot.xlsx",
+    'machine_name': "DCM",
+    'code': "VDCM0001.a",
+    'line': '1.a',
+    'description': "Thay thế Motor trục 1"
+ 
+ }
+ doc5 = {
+    'file_path': "sample pdf/ff2bb11dd51f394d681fb49a574b8afb.pdf",
+    'machine_name': "P100",
+    'code': "aaaa",
+    'line': 'aaaab1',
+    'description': "Chuẩn bị cho máy P100"
+ 
+ }
+ list_máy = [doc1,doc2,doc3,doc4,doc5]
+ #list_máy = [doc5]
+ for máy in list_máy:
+    insert_pdf_to_db(client=client,doc=máy)
 
-doc1 = {
-   'file_path': "sample pdf/Nạp ni tơ vào bình injection - Máy DCM.xlsx",
-   'machine_name': "DCM",
-   'code': "VDCM0001.2.3.a",
-   'line': '1.2.3.a',
-   'description': "Thao tác Nạp khí nito vào bình cho Injection"
 
-}
-doc2 = {
-   'file_path': "sample pdf/LNCT800SoftwareApplicationManual.pdf",
-   'machine_name': "LNCT800",
-   'code': "CNC1",
-   'line': '1.1.1.1',
-   'description': "Các lỗi thường gặp trong LNCT800"
-
-}
-doc3 = {
-   'file_path': "sample pdf/Thao tác thay filter máy hút bụi - May Shot Blast.pdf",
-   'machine_name': "DCM",
-   'code': "VDCM0001.2.3.a",
-   'line': '1.2.3.a',
-   'description': "Thao tác thay filter máy hút bụi"
-
-}
-doc4 = {
-   'file_path': "sample pdf/thay thế Motor trục - Robot.xlsx",
-   'machine_name': "DCM",
-   'code': "VDCM0001.a",
-   'line': '1.a',
-   'description': "Thay thế Motor trục 1"
-
-}
-doc5 = {
-   'file_path': "sample pdf/ff2bb11dd51f394d681fb49a574b8afb.pdf",
-   'machine_name': "P100",
-   'code': "aaaa",
-   'line': 'aaaab1',
-   'description': "Chuẩn bị cho máy P100"
-
-}
-list_máy = [doc1,doc2,doc3,doc4,doc5]
-#list_máy = [doc5]
-for máy in list_máy:
-   insert_pdf_to_db(client=client,doc=máy)
-
+#HÀM CUỐI
+def Insert_Documents(list_documents):
+   create_class()
+   for document in list_documents:
+      insert_pdf_to_db(client=client,doc=document)
+ 
 
 
 

@@ -61,7 +61,7 @@ if __name__ == "__main__":
     answer = answering(query, extract_tables(metadatas))
     print(answer)
 
-
+#HÀM ĐÓNG GÓI
 def Response(query):
     metadatas = List_of_meta_data(query=query)
     answer = answering(query, extract_tables(metadatas))
