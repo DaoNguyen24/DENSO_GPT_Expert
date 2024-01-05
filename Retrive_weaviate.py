@@ -89,7 +89,7 @@ def keyword_retrive(client,query,filter):
           properties=['description^2',"content"]
         )
         .with_additional("score")
-        .with_limit(5)
+        .with_limit(2)
         .do()
     )
     list = []
@@ -114,7 +114,7 @@ def hybrid_retrive(client , query,filter ):
             properties=['description^2',"content"]
         )
         .with_additional(["score"])
-        .with_limit(4)
+        .with_limit(2)
         .do()
     )
     list = []
@@ -135,7 +135,7 @@ def semantic_retrive(client, query,filter ):
         .with_near_text({
             "concepts": query
         })
-        .with_limit(3)
+        .with_limit(2)
         .with_additional(["certainty"])
         .do()
     )
@@ -166,7 +166,7 @@ def get_3_page(list_of_responses):
 if __name__ == "__main__":
     client = weaviate.Client("http://localhost:8081")
     print("weaviatedb is ready: ",client.is_ready())
-    query = "Làm thế nào để thay filter máy hút bụi trên máy DCM?"
+    query = "Làm thế nào để sửa lỗi int3170 trên máy CNC1"
     filter = get_filter(client=client,query=query)
     list1 = keyword_retrive(client=client,query= query,filter=filter)
     list2 = hybrid_retrive(client=client,query= query,filter=filter)

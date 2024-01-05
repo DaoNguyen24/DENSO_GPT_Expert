@@ -3,7 +3,7 @@
 from openai import OpenAI
 import fitz
 import pandas
-client = OpenAI(api_key = "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")
+client = OpenAI(api_key = "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")
 from Retrive_weaviate import List_of_meta_data
 
 def extract_tables(metadatas: list[dict]):
@@ -33,14 +33,16 @@ def extract_tables(metadatas: list[dict]):
 
 def answering(query, tables):
     question = f"""
-    You are an assistant for question-answering tasks. Use one of the three following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Indicate the error's name and show steps to solve it.
+    You are an assistant for question-answering tasks.
+    Use one of the three following pieces of retrieved contexts to answer the question. If you don't know the answer, just say that you don't know. Show steps to solve it.
+    Answer in Vietnamese
     Question: {query} 
     Context: {tables} 
     Answer:
     
     """
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo-1106",
+        model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": question},
         ]
@@ -52,9 +54,15 @@ def answering_with_metadata(query, metadatas):
     return answering(query, tables)
 
 if __name__ == "__main__":
-    query = "Làm thế nào để thay filter máy hút bụi trên máy DCM?"
+    query = "Làm thế nào để nạp ti nơ vào bình trên máy VDCM0001.2.3.a "
     metadatas = List_of_meta_data(query=query)
     print(metadatas)
     #addon = extract_tables(metadatas)
     answer = answering(query, extract_tables(metadatas))
     print(answer)
+
+
+def Response(query):
+    metadatas = List_of_meta_data(query=query)
+    answer = answering(query, extract_tables(metadatas))
+    return answer
