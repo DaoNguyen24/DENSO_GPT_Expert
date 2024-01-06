@@ -43,11 +43,12 @@ def function_calling(query):
         ("system", "You are helpful but sassy assistant"),
         ("user", "{input}"),
     ])
-    chain = prompt | model | OpenAIFunctionsAgentOutputParser()|route
+    chain = prompt | model | OpenAIFunctionsAgentOutputParser()
 
     result = chain.invoke({"input": query})
-    print(result)
+    print(result.tool)
 
 if __name__ =="__main__":
+   #function_calling("Làm thế nào để sửa lỗi int3170 trên máy CNC1")
    function_calling("Tôi muốn xem lịch sử máy hút bụi")
 

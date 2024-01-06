@@ -3,7 +3,7 @@
 from openai import OpenAI
 import fitz
 import pandas
-client = OpenAI(api_key = "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")
+client = OpenAI(api_key = "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")
 from Retrive_weaviate import List_of_meta_data
 
 def extract_tables(metadatas: list[dict]):

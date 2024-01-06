@@ -13,8 +13,10 @@ def retrive_history(query):
         .with_limit(1)
         .do()
     )
+ #print(response)
  try:
-  filepath = response["data"]["Get"]["Denso_Document"][0]["machine_name"]
+  filepath = response["data"]["Get"]["Denso_history"][0]["source"]
+  return filepath
   
  except:
   return "Tôi không tìm thấy lịch sử máy bạn đang cần.Xin hãy thử Câu hỏi khác cụ thể hơn"
