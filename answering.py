@@ -3,7 +3,7 @@
 from openai import OpenAI
 import fitz
 import pandas
-client = OpenAI(api_key = "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")
+client = OpenAI(api_key = "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")
 from Retrive_weaviate import List_of_meta_data
 
 def extract_tables(metadatas: list[dict]):
@@ -43,6 +43,8 @@ def answering(query, tables):
     """
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
+        temperature= 0,
+        
         messages=[
             {"role": "system", "content": question},
         ]
@@ -57,12 +59,27 @@ if __name__ == "__main__":
     query = "Làm thế nào để nạp ti nơ vào bình trên máy VDCM0001.2.3.a "
     metadatas = List_of_meta_data(query=query)
     print(metadatas)
+    list_of_metadata = []
+    for meta in metadatas:
+        source = {
+            "source": meta["source"],
+            "page": meta["page"]
+        }
+        list_of_metadata.append(source)
+    print(list_of_metadata)
     #addon = extract_tables(metadatas)
-    answer = answering(query, extract_tables(metadatas))
-    print(answer)
+    #answer = answering(query, extract_tables(metadatas))
+    #print(answer)
 
 #HÀM ĐÓNG GÓI
 def Response(query):
     metadatas = List_of_meta_data(query=query)
+    list_of_metadata = []
+    for meta in metadatas:
+        source = {
+            "source": meta["source"],
+            "page": meta["page"]
+        }
+        list_of_metadata.append(source)
     answer = answering(query, extract_tables(metadatas))
-    return answer
+    return answer,list_of_metadata

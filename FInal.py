@@ -35,7 +35,7 @@ def function_calling(query):
             get_history, get_instruction
         ]
     ]
-    model = ChatOpenAI(model="gpt-3.5-turbo",temperature=0,openai_api_key='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').bind(functions=functions)
+    model = ChatOpenAI(model="gpt-3.5-turbo",temperature=0,openai_api_key='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').bind(functions=functions)
 
     from langchain.prompts import ChatPromptTemplate
     from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
@@ -45,9 +45,10 @@ def function_calling(query):
     ])
     chain = prompt | model | OpenAIFunctionsAgentOutputParser()|route
 
-    result = chain.invoke({"input": query})
+    result,metadata = chain.invoke({"input": query})
     print(result)
+    print(metadata)
 
 if __name__ =="__main__":
-   function_calling("Tôi muốn xem lịch sử máy hút bụi")
+   function_calling("Cho lịch sử máy hút bụi")
 
